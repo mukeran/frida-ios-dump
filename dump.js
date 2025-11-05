@@ -1,4 +1,24 @@
-Module.ensureInitialized('Foundation');
+import ObjC from "frida-objc-bridge";
+function waitForModule(moduleName) {
+    return new Promise(resolve => {
+        const interval = setInterval(() => {
+            const module = Process.getModuleByName(moduleName)
+            if (module != null) {
+                clearInterval(interval);
+                resolve(module);
+            }
+        }, 0);
+    });
+}
+
+function waitForModuleSync(moduleName) {
+    while (Process.getModuleByName(moduleName) == null) {
+        Thread.sleep(0);
+    }
+    return Process.getModuleByName(moduleName);
+}
+
+waitForModuleSync('Foundation');
 
 var O_RDONLY = 0;
 var O_WRONLY = 1;
@@ -17,77 +37,77 @@ function putStr(addr, str) {
     if (typeof addr == "number") {
         addr = ptr(addr);
     }
-    return Memory.writeUtf8String(addr, str);
+    return addr.writeUtf8String(str);
 }
 
 function getByteArr(addr, l) {
     if (typeof addr == "number") {
         addr = ptr(addr);
     }
-    return Memory.readByteArray(addr, l);
+    return addr.readByteArray(l);
 }
 
 function getU8(addr) {
     if (typeof addr == "number") {
         addr = ptr(addr);
     }
-    return Memory.readU8(addr);
+    return addr.readU8();
 }
 
 function putU8(addr, n) {
     if (typeof addr == "number") {
         addr = ptr(addr);
     }
-    return Memory.writeU8(addr, n);
+    return addr.writeU8(n);
 }
 
 function getU16(addr) {
     if (typeof addr == "number") {
         addr = ptr(addr);
     }
-    return Memory.readU16(addr);
+    return addr.readU16();
 }
 
 function putU16(addr, n) {
     if (typeof addr == "number") {
         addr = ptr(addr);
     }
-    return Memory.writeU16(addr, n);
+    return addr.writeU16(n);
 }
 
 function getU32(addr) {
     if (typeof addr == "number") {
         addr = ptr(addr);
     }
-    return Memory.readU32(addr);
+    return addr.readU32();
 }
 
 function putU32(addr, n) {
     if (typeof addr == "number") {
         addr = ptr(addr);
     }
-    return Memory.writeU32(addr, n);
+    return addr.writeU32(n);
 }
 
 function getU64(addr) {
     if (typeof addr == "number") {
         addr = ptr(addr);
     }
-    return Memory.readU64(addr);
+    return addr.readU64();
 }
 
 function putU64(addr, n) {
     if (typeof addr == "number") {
         addr = ptr(addr);
     }
-    return Memory.writeU64(addr, n);
+    return addr.writeU64(n);
 }
 
 function getPt(addr) {
     if (typeof addr == "number") {
         addr = ptr(addr);
     }
-    return Memory.readPointer(addr);
+    return addr.readPointer();
 }
 
 function putPt(addr, n) {
@@ -97,7 +117,7 @@ function putPt(addr, n) {
     if (typeof n == "number") {
         n = ptr(n);
     }
-    return Memory.writePointer(addr, n);
+    return addr.writePointer(n);
 }
 
 function malloc(size) {
@@ -106,7 +126,7 @@ function malloc(size) {
 
 function getExportFunction(type, name, ret, args) {
     var nptr;
-    nptr = Module.findExportByName(null, name);
+    nptr = Module.getGlobalExportByName(name);
     if (nptr === null) {
         console.log("cannot find " + name);
         return null;
@@ -119,7 +139,7 @@ function getExportFunction(type, name, ret, args) {
             }
             return funclet;
         } else if (type === "d") {
-            var datalet = Memory.readPointer(nptr);
+            var datalet = nptr.readPointer();
             if (typeof datalet === "undefined") {
                 console.log("parse error " + name);
                 return null;
@@ -156,10 +176,9 @@ function open(pathname, flags, mode) {
 var modules = null;
 function getAllAppModules() {
     modules = new Array();
-    var tmpmods = Process.enumerateModulesSync();
-    for (var i = 0; i < tmpmods.length; i++) {
-        if (tmpmods[i].path.indexOf(".app") != -1) {
-            modules.push(tmpmods[i]);
+    for (const module of Process.enumerateModules()) {
+        if (module.path.indexOf(".app") != -1) {
+            modules.push(module);
         }
     }
     return modules;
@@ -316,7 +335,7 @@ function dumpModule(name) {
 function loadAllDynamicLibrary(app_path) {
     var defaultManager = ObjC.classes.NSFileManager.defaultManager();
     var errorPtr = Memory.alloc(Process.pointerSize); 
-    Memory.writePointer(errorPtr, NULL); 
+    errorPtr.writePointer(NULL); 
     var filenames = defaultManager.contentsOfDirectoryAtPath_error_(app_path, errorPtr);
     for (var i = 0, l = filenames.count(); i < l; i++) {
         var file_name = filenames.objectAtIndex_(i);
@@ -342,9 +361,9 @@ function loadAllDynamicLibrary(app_path) {
             continue;
         } else {
             var isDirPtr = Memory.alloc(Process.pointerSize);
-            Memory.writePointer(isDirPtr,NULL);
+            isDirPtr.writePointer(NULL);
             defaultManager.fileExistsAtPath_isDirectory_(file_path, isDirPtr);
-            if (Memory.readPointer(isDirPtr) == 1) {
+            if (isDirPtr.readPointer() == 1) {
                 loadAllDynamicLibrary(file_path);
             } else {
                 if (file_name.hasSuffix_(".dylib")) {

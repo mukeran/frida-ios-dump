@@ -1,0 +1,28 @@
+{
+  "name": "frida-ios-dump",
+  "version": "1.0.0",
+  "description": "Pull a decrypted IPA from a jailbroken device",
+  "homepage": "https://github.com/AloneMonkey/frida-ios-dump#readme",
+  "bugs": {
+    "url": "https://github.com/AloneMonkey/frida-ios-dump/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AloneMonkey/frida-ios-dump.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "dump.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "compile": "frida-compile -S -c dump.js -o dump.compiled.js"
+  },
+  "devDependencies": {
+    "@types/frida-gum": "^19.0.1",
+    "frida-compile": "^19.0.4"
+  },
+  "dependencies": {
+    "frida-objc-bridge": "^8.0.5"
+  }
+}
