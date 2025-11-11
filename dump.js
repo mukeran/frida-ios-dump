@@ -236,7 +236,7 @@ function dumpModule(name) {
         remove(allocStr(newmodpath));
     }
 
-    var fmodule = open(newmodpath, O_CREAT | O_RDWR, 0);
+    var fmodule = open(newmodpath, O_CREAT | O_RDWR, 0o777);
     var foldmodule = open(oldmodpath, O_RDONLY, 0);
 
     if (fmodule == -1 || foldmodule == -1) {
