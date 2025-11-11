@@ -117,6 +117,8 @@ def on_message(message, data):
             scp_to = PAYLOAD_PATH + '/'
 
             with SCPClient(ssh.get_transport(), progress = progress, socket_timeout = 60) as scp:
+                stdin, stdout, stderr = ssh.exec_command(f'chmod +r {scp_from}')
+                stdout.read()
                 scp.get(scp_from, scp_to)
 
             chmod_dir = os.path.join(PAYLOAD_PATH, os.path.basename(dump_path))
@@ -135,6 +137,8 @@ def on_message(message, data):
             scp_from = app_path
             scp_to = PAYLOAD_PATH + '/'
             with SCPClient(ssh.get_transport(), progress = progress, socket_timeout = 60) as scp:
+                stdin, stdout, stderr = ssh.exec_command(f'chmod -R +r {scp_from}')
+                stdout.read()
                 scp.get(scp_from, scp_to, recursive=True)
 
             chmod_dir = os.path.join(PAYLOAD_PATH, os.path.basename(app_path))
